@@ -1,0 +1,12 @@
+build/
+cmake-build-debug/
+cmake-build-release/
+.idea/
+*.elf
+*.bin
+*.hex
+*.map
+*.o
+*.d
+*.axf
+*.lst

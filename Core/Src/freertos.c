@@ -29,6 +29,7 @@
 #include "font.h"
 #include "app_cli.h"
 #include "app_display.h"
+#include "app_status.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -90,6 +91,7 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
+  AppStatus_Init();
   AppDisplay_Init();
   AppCli_Init();
   /* USER CODE END Init */

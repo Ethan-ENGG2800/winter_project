@@ -1,5 +1,6 @@
 #include "app_cli.h"
 #include "app_display.h"
+#include "app_status.h"
 
 #include "FreeRTOS.h"
 #include "queue.h"
@@ -10,6 +11,7 @@
 
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #define CLI_RX_QUEUE_LENGTH   128
 #define CLI_LINE_BUFFER_SIZE  64
@@ -186,12 +188,18 @@ static void Cli_ProcessCommand(char *cmd)
         Cli_SendString("  clear         - Clear terminal\r\n");
         Cli_SendString("  echo <text>   - Echo text\r\n");
         Cli_SendString("  oled <text>   - Show text on OLED\r\n");
+        Cli_SendString("  mode auto     - Set auto mode\r\n");
+        Cli_SendString("  mode manual   - Set manual mode\r\n");
+        Cli_SendString("  door open     - Set door state open\r\n");
+        Cli_SendString("  door close    - Set door state closed\r\n");
+        Cli_SendString("  alarm on      - Set alarm on\r\n");
+        Cli_SendString("  alarm off     - Set alarm off\r\n");
         Cli_SendString("\r\n");
 
         AppDisplay_ShowText("CLI: help",
-                            "help/status",
-                            "echo/oled",
-                            "System Ready");
+                            "status/mode",
+                            "door/alarm",
+                            "oled/echo");
         return;
     }
 
@@ -199,15 +207,54 @@ static void Cli_ProcessCommand(char *cmd)
      * status
      */
     if (strcmp(cmd, "status") == 0) {
-        Cli_SendString("RTOS: RUN\r\n");
-        Cli_SendString("UART: OK\r\n");
-        Cli_SendString("CLI: OK\r\n");
-        Cli_SendString("OLED: OK\r\n");
+        AppStatus_t status;
+        char buffer[64];
 
-        AppDisplay_ShowText("CLI: status",
-                            "RTOS: RUN",
-                            "UART: OK",
-                            "OLED: OK");
+        AppStatus_GetSnapshot(&status);
+
+        Cli_SendString("\r\nSystem Status:\r\n");
+
+        snprintf(buffer, sizeof(buffer), "  Mode: %s\r\n",
+                 AppStatus_ModeToString(status.mode));
+        Cli_SendString(buffer);
+
+        snprintf(buffer, sizeof(buffer), "  Door: %s\r\n",
+                 AppStatus_DoorStateToString(status.doorState));
+        Cli_SendString(buffer);
+
+        snprintf(buffer, sizeof(buffer), "  Alarm: %s\r\n",
+                 AppStatus_AlarmStateToString(status.alarmState));
+        Cli_SendString(buffer);
+
+        snprintf(buffer, sizeof(buffer), "  Distance: %u cm\r\n",
+                 status.distanceCm);
+        Cli_SendString(buffer);
+
+        snprintf(buffer, sizeof(buffer), "  Temp: %d C\r\n",
+                 status.temperatureC);
+        Cli_SendString(buffer);
+
+        snprintf(buffer, sizeof(buffer), "  Humidity: %u %%\r\n",
+                 status.humidity);
+        Cli_SendString(buffer);
+
+        snprintf(buffer, sizeof(buffer), "  UART: %s\r\n",
+                 status.uartOk ? "OK" : "ERR");
+        Cli_SendString(buffer);
+
+        snprintf(buffer, sizeof(buffer), "  OLED: %s\r\n",
+                 status.oledOk ? "OK" : "ERR");
+        Cli_SendString(buffer);
+
+        snprintf(buffer, sizeof(buffer), "  Sensor: %s\r\n",
+                 status.sensorOk ? "OK" : "ERR");
+        Cli_SendString(buffer);
+
+        AppDisplay_ShowText("System Status",
+                            AppStatus_ModeToString(status.mode),
+                            AppStatus_DoorStateToString(status.doorState),
+                            AppStatus_AlarmStateToString(status.alarmState));
+
         return;
     }
 
@@ -257,6 +304,84 @@ static void Cli_ProcessCommand(char *cmd)
                             "");
 
         Cli_SendString("OLED message updated\r\n");
+        return;
+    }
+
+    if (strcmp(cmd, "mode auto") == 0) {
+        AppStatus_SetMode(APP_MODE_AUTO);
+
+        Cli_SendString("Mode set to AUTO\r\n");
+
+        AppDisplay_ShowText("Mode Changed",
+                            "Mode: AUTO",
+                            "",
+                            "");
+
+        return;
+    }
+
+    if (strcmp(cmd, "mode manual") == 0) {
+        AppStatus_SetMode(APP_MODE_MANUAL);
+
+        Cli_SendString("Mode set to MANUAL\r\n");
+
+        AppDisplay_ShowText("Mode Changed",
+                            "Mode: MANUAL",
+                            "",
+                            "");
+
+        return;
+    }
+
+    if (strcmp(cmd, "door open") == 0) {
+        AppStatus_SetDoorState(APP_DOOR_OPEN);
+
+        Cli_SendString("Door state set to OPEN\r\n");
+
+        AppDisplay_ShowText("Door State",
+                            "Door: OPEN",
+                            "",
+                            "");
+
+        return;
+    }
+
+    if (strcmp(cmd, "door close") == 0) {
+        AppStatus_SetDoorState(APP_DOOR_CLOSED);
+
+        Cli_SendString("Door state set to CLOSED\r\n");
+
+        AppDisplay_ShowText("Door State",
+                            "Door: CLOSED",
+                            "",
+                            "");
+
+        return;
+    }
+
+    if (strcmp(cmd, "alarm on") == 0) {
+        AppStatus_SetAlarmState(APP_ALARM_ON);
+
+        Cli_SendString("Alarm set to ON\r\n");
+
+        AppDisplay_ShowText("Alarm State",
+                            "Alarm: ON",
+                            "",
+                            "");
+
+        return;
+    }
+
+    if (strcmp(cmd, "alarm off") == 0) {
+        AppStatus_SetAlarmState(APP_ALARM_OFF);
+
+        Cli_SendString("Alarm set to OFF\r\n");
+
+        AppDisplay_ShowText("Alarm State",
+                            "Alarm: OFF",
+                            "",
+                            "");
+
         return;
     }
 

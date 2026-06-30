@@ -36,7 +36,8 @@ add_executable(${CMAKE_PROJECT_NAME}
         Core/Src/font.c
         Core/Src/oled.c
         Core/Src/app_cli.c
-        Core/Src/app_display.c)
+        Core/Src/app_display.c
+        Core/Src/app_status.c)
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
